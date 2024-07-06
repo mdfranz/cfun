@@ -47,4 +47,3 @@ Outputs:
     Value: !Ref S3Bucket
   User:
     Value: !Ref S3User
-
