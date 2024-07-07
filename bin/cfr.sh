@@ -1,5 +1,12 @@
 #!/bin/bash 
 
+#
+# Dependencies 
+# - https://github.com/mikefarah/yq
+# - https://jqlang.github.io/jq/
+# - https://docs.aws.amazon.com/cli/
+#
+
 usage() {
     echo "Usage: $0 create|update|delete STACK_NAME TEMPLATE_FILE [CAPABILITIES] [ADDITIONAL_ARGS]"
     exit 1
@@ -27,6 +34,9 @@ case $ACTION in
         ;;
     delete)
         aws cloudformation delete-stack --stack-name $STACK_NAME
+        ;;
+    show)
+        cat $STACK_NAME | yq '.Resources|keys'; exit 1
         ;;
     *)
         usage
