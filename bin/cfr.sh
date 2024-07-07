@@ -45,5 +45,5 @@ esac
 
 if [[ "$ACTION" != "list" ]]
 then
-  aws cloudformation describe-stack-events --stack-name $STACK_NAME | jq -r '.StackEvents[]|[.ResourceType,.ResourceStatus,.Timestamp]| @csv'
+  aws cloudformation describe-stack-events --stack-name $STACK_NAME | jq -r '.StackEvents[]|[.Timestamp, .ResourceType,.ResourceStatus]| @csv'
 fi
