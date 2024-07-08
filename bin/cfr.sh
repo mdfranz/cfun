@@ -14,6 +14,7 @@ usage() {
     echo "or "
     echo "       $0 list "
     echo "       $0 show <TEMPLATE_FILE>"
+    echo "       $0 dump <STACK_NAME>"
     echo
     exit 1
 }
@@ -27,6 +28,13 @@ STACK_NAME=$2
 TEMPLATE_FILE=$3
 CAPABILITIES=$4
 shift 4
+
+if [ ! -f $TEMPLATE_FILE ]
+then 
+  echo ERROR: $TEMPLATE_FILE does not exist!
+  exit 1
+fi
+
 
 # Build prefix to handle Service Role
 
@@ -48,11 +56,14 @@ case $ACTION in
     list)
         aws cloudformation list-stacks | jq -r '.StackSummaries[] | select(.StackStatus != "DELETE_COMPLETE")| [.CreationTime, .StackName, .StackStatus ]|@csv'
         ;;
+    dump)
+        aws cloudformation describe-stacks --stack-name $STACK_NAME; exit 0
+        ;;
     delete)
         aws cloudformation delete-stack $CMD_PREFIX
         ;;
     show)
-        echo "Showing resources..." ; cat $STACK_NAME | yq '.Resources|keys'; exit 1
+        echo "Showing resources..." ; cat $STACK_NAME | yq '.Resources|keys'; exit 0
         ;;
     *)
         usage
