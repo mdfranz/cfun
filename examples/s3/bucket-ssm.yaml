@@ -36,7 +36,7 @@ Resources:
   BasicParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub '${S3Bucket}-${S3UserAccessKey}'
+      Name: !Sub ${S3Bucket}-${S3UserAccessKey}
       Value: !GetAtt S3UserAccessKey.SecretAccessKey
       Type: String
 

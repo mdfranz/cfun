@@ -64,10 +64,9 @@ then
   for i in {1..5}
   do
     aws cloudformation describe-stack-events --no-paginate --stack-name $STACK_NAME | jq -r '.StackEvents[]|[.Timestamp, .ResourceType,.ResourceStatus]| @csv'
-    echo "Loop $i - You can break at any time, trust me!"
+    echo "=== Loop $i - you can break at any time, trust me!"
     echo
     sleep 3
-    clear
     aws cloudformation describe-stack-events --no-paginate --stack-name $STACK_NAME | jq -r '.StackEvents[]|[.Timestamp, .ResourceType,.ResourceStatus]| @csv'
   done
 fi
