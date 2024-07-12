@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Launch EC2 instance with the latest Ubuntu AMI
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubneId:
+    Type: AWS::EC2::Subnet::Id
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+  LatestAmiId:
+    Type: String
+    Default: '/aws/service/canonical/ubuntu/server/noble/stable/current/amd64/hvm/ebs-gp2/ami-id'
+  KeyPair:
+    Description: Amazon EC2 Key Pair used to ssh to the cluster nodes
+    Type: "AWS::EC2::KeyPair::KeyName"
+  InstanceType:
+    Type: String
+    Default: t2.medium
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      KeyName: !Ref KeyPair
+      SecurityGroupIds:
+        - !Ref MyBasicSecurityGroup
+
+  MyBasicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "A very basic Security group"
+      GroupDescription: "Allows SSH inbound traffic"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+Outputs:
+  InstanceIP:
+    Value: !GetAtt MyInstance.PublicIp
+    Description: Instance public IP
