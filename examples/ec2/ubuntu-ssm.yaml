@@ -36,18 +36,19 @@ Resources:
         - DeviceName: "/dev/sda1"                                              
           Ebs:                         
             VolumeSize: !Ref VolumeSize    
-
       UserData: 
         Fn::Base64: !Sub |
          #!/bin/bash -xe
          sudo apt-get update -y
          sudo apt-get upgrade -y
          sudo apt -y install python3 pipx 
+
   MyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref MyInstanceRole
+        
   MyInstanceRole:
     Type: AWS::IAM::Role
     Properties:
