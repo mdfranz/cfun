@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Launch EC2 instance with the latest Ubuntu AMI with SSM
+Description: Launch EC2 instance with the latest Ubuntu AMI with SSM 
 
 Parameters:
   VpcId:
@@ -20,6 +20,10 @@ Parameters:
       - t2.xlarge
       - c5.large
       - c5.xlarge
+  VolumeSize:                                                                                                                     
+    Type: Number                                                                                                                  
+    Default: 20                                                                                                                   
+    AllowedValues: [20, 40, 60, 80, 100] 
 
 Resources:
   MyInstance:
@@ -29,13 +33,22 @@ Resources:
       InstanceType: !Ref InstanceType
       AvailabilityZone: !Ref AvailabilityZone
       IamInstanceProfile: !Ref MyInstanceProfile
+      BlockDeviceMappings:             
+        - DeviceName: "/dev/sda1"                                              
+          Ebs:                         
+            VolumeSize: !Ref VolumeSize    
 
+      UserData: 
+        Fn::Base64: !Sub |
+         #!/bin/bash -xe
+         sudo apt-get update -y
+         sudo apt-get upgrade -y
+         sudo apt -y install python3 pipx 
   MyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref MyInstanceRole
-
   MyInstanceRole:
     Type: AWS::IAM::Role
     Properties:
