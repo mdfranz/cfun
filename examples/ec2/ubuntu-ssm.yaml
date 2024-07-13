@@ -2,8 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Launch EC2 instance with the latest Ubuntu AMI with SSM 
 
 Parameters:
-  VpcId:
-    Type: AWS::EC2::VPC::Id
   SubnetId:
     Type: AWS::EC2::Subnet::Id
   AvailabilityZone:
@@ -33,6 +31,7 @@ Resources:
       InstanceType: !Ref InstanceType
       AvailabilityZone: !Ref AvailabilityZone
       IamInstanceProfile: !Ref MyInstanceProfile
+      SubnetId: !Ref SubnetId
       BlockDeviceMappings:             
         - DeviceName: "/dev/sda1"                                              
           Ebs:                         
