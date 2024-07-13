@@ -2,6 +2,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Launch EC2 instance with the latest Ubuntu AMI with SSM 
 
 Parameters:
+  InstanceName:
+    Description: The name of the Instance
+    Type: String
+    Default: "SSM-Instance"
+  VpcId:
+    Description: VPC (Because of SGs)
+    Type: AWS::EC2::VPC::Id
   SubnetId:
     Type: AWS::EC2::Subnet::Id
   AvailabilityZone:
@@ -24,6 +31,15 @@ Parameters:
     AllowedValues: [20, 40, 60, 80, 100] 
 
 Resources:
+  MyEmptySecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for EC2 instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - CidrIp: 127.0.0.1/32
+          IpProtocol: -1   
+
   MyInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -31,17 +47,26 @@ Resources:
       InstanceType: !Ref InstanceType
       AvailabilityZone: !Ref AvailabilityZone
       IamInstanceProfile: !Ref MyInstanceProfile
-      SubnetId: !Ref SubnetId
-      BlockDeviceMappings:             
-        - DeviceName: "/dev/sda1"                                              
-          Ebs:                         
-            VolumeSize: !Ref VolumeSize    
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          SubnetId: !Ref SubnetId
+          DeviceIndex: '0'
+          GroupSet: [!Ref MyEmptySecurityGroup]
+
       UserData: 
         Fn::Base64: !Sub |
          #!/bin/bash -xe
          sudo apt-get update -y
          sudo apt-get upgrade -y
          sudo apt -y install python3 pipx 
+
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+      BlockDeviceMappings:             
+        - DeviceName: "/dev/sda1"                                              
+          Ebs:                         
+            VolumeSize: !Ref VolumeSize    
 
   MyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -64,8 +89,3 @@ Resources:
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
       Path: /
-
-Outputs:
-  MyInstanceIP:
-    Value: !GetAtt MyInstance.PublicIp
-    Description: Instance public IP
