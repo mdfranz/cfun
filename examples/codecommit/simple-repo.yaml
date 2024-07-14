@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  MyRepositoryName:
+    Type: String
+    Description: Name of the CodeCommit repository
+  MyRepositoryDescription:
+    Type: String
+    Description: Description of the CodeCommit repository
+
+Resources:
+  MyCodeCommitRepo:
+    Type: 'AWS::CodeCommit::Repository'
+    Properties:
+      RepositoryDescription: !Ref 'MyRepositoryDescription'
+      RepositoryName: !Ref 'MyRepositoryName'
+
+  CodeCommitUser:
+    Type: 'AWS::IAM::User'
+
+  CodeCommitUserAccessKey:
+    Type: 'AWS::IAM::AccessKey'
+    Properties:
+      UserName: 
+        !Ref 'CodeCommitUser'
+
+  FullAccessPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: !Sub 'AccessFor-${CodeCommitUser}-to-${MyCodeCommitRepo}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - 'codecommit:*'
+            Resource: 
+              Fn::GetAtt: 
+                - 'MyCodeCommitRepo'
+                - 'Arn'
+      Users:
+        - !Ref 'CodeCommitUser'
