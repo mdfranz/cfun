@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}_sqs
+  QueueUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Sub ${AWS::StackName}_sqs
+  QueueUserPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: QueueUserPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+            Resource: !GetAtt MyQueue.Arn
+      Users:
+        - !Ref QueueUser
+
+  QueueUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref QueueUser
+
+  BasicParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${AWS::StackName}.${QueueUserAccessKey}
+      Value: !GetAtt QueueUserAccessKey.SecretAccessKey
+      Type: String
+
+Outputs:
+  QueueUrl:
+    Value: !Ref MyQueue
+    Description: URL of the SQS queue
+  QueueUserAccessKeyId:
+    Value: !Ref QueueUserAccessKey
+    Description: Access Key ID for the IAM user
+  QueueUser:
+    Value: !Ref QueueUser

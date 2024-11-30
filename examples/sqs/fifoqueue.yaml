@@ -4,11 +4,12 @@ Resources:
   MyQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}_queue
+      QueueName: !Sub ${AWS::StackName}_sqs.fifo
+      FifoQueue: true
   QueueUser:
     Type: AWS::IAM::User
     Properties:
-      UserName: !Sub ${AWS::StackName}-QueueUser
+      UserName: !Sub ${AWS::StackName}_sqs
   QueueUserPolicy:
     Type: AWS::IAM::Policy
     Properties:
