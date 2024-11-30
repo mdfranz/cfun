@@ -31,8 +31,6 @@ Resources:
     Properties:
       UserName: !Ref S3User
 
-# https://medium.com/theburningmonk-com/cloudformation-protip-use-sub-instead-of-join-theburningmonk-com-fc43ceae74d1
-
   BasicParameter:
     Type: AWS::SSM::Parameter
     Properties:
