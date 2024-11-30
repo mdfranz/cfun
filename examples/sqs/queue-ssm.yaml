@@ -20,6 +20,8 @@ Resources:
             Action:
               - sqs:SendMessage
               - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
             Resource: !GetAtt MyQueue.Arn
       Users:
         - !Ref QueueUser
