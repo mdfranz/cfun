@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Launch EC2 instance with the latest Ubuntu AMI with SSM 
+
+Parameters:
+  InstanceName:
+    Description: The name of the Instance
+    Type: String
+    Default: "SSM-Instance"
+  VpcId:
+    Description: VPC (Because of SGs)
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: "/aws/service/canonical/ubuntu/server/noble/stable/current/amd64/hvm/ebs-gp3/ami-id"
+  InstanceType:
+    Type: String
+    Default: g4dn.xlarge
+    AllowedValues:
+      - g4dn.xlarge
+      - g4ad.8xlarge
+      - g6.xlarge
+      - g6e.xlarge	
+  VolumeSize:                                                                                                                     
+    Type: Number                                                                                                                  
+    Default: 80
+    AllowedValues: [80,100,200,500] 
+
+Resources:
+  MyEmptySecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for EC2 instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - CidrIp: 127.0.0.1/32
+          IpProtocol: -1   
+
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      IamInstanceProfile: !Ref MyInstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          SubnetId: !Ref SubnetId
+          DeviceIndex: '0'
+          GroupSet: [!Ref MyEmptySecurityGroup]
+
+      UserData: 
+        Fn::Base64: !Sub |
+         #!/bin/bash -xe
+         sudo apt-get update -y
+         sudo apt-get upgrade -y
+         sudo apt -y install python3 nvidia-headless-550-server nvidia-utils-550-server software-properties-common btm
+         sudo add-apt-repository -y --update ppa:ansible/ansible
+         sudo apt install ansible -y
+
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+      BlockDeviceMappings:             
+        - DeviceName: "/dev/sda1"                                              
+          Ebs:                         
+            VolumeSize: !Ref VolumeSize    
+
+  MyInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref MyInstanceRole
+        
+  MyInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Path: /

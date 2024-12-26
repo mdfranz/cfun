@@ -8,7 +8,7 @@ Resources:
   QueueUser:
     Type: AWS::IAM::User
     Properties:
-      UserName: !Sub ${AWS::StackName}_sqs
+      UserName: !Sub ${AWS::StackName}_sqsuser
   QueueUserPolicy:
     Type: AWS::IAM::Policy
     Properties:
