@@ -22,12 +22,13 @@ Parameters:
     AllowedValues:
       - g4dn.xlarge
       - g4ad.8xlarge
+      - g5.xlarge
       - g6.xlarge
       - g6e.xlarge	
   VolumeSize:                                                                                                                     
     Type: Number                                                                                                                  
-    Default: 80
-    AllowedValues: [80,100,200,500] 
+    Default: 200
+    AllowedValues: [80,100,200,500,750] 
 
 Resources:
   MyEmptySecurityGroup:
@@ -60,6 +61,7 @@ Resources:
          sudo apt -y install python3 nvidia-headless-550-server nvidia-utils-550-server software-properties-common btm
          sudo add-apt-repository -y --update ppa:ansible/ansible
          sudo apt install ansible -y
+	 curl https://raw.githubusercontent.com/ollama/ollama/refs/heads/main/scripts/install.sh -o /var/tmp/ollama-install.sh
 
       Tags:
         - Key: Name
