@@ -61,7 +61,7 @@ Resources:
          sudo apt -y install python3 nvidia-headless-550-server nvidia-utils-550-server software-properties-common btm
          sudo add-apt-repository -y --update ppa:ansible/ansible
          sudo apt install ansible -y
-	 curl https://raw.githubusercontent.com/ollama/ollama/refs/heads/main/scripts/install.sh -o /var/tmp/ollama-install.sh
+         curl https://raw.githubusercontent.com/ollama/ollama/refs/heads/main/scripts/install.sh -o /var/tmp/ollama-install.sh
 
       Tags:
         - Key: Name
