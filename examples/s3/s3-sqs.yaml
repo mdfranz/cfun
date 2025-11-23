@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Creates an SQS queue for Vector logs with S3 write permissions.'
+
+Parameters:
+  ExistingS3BucketName:
+    Type: String
+    Description: The name of the EXISTING S3 bucket (e.g., my-app-logs).
+
+Resources:
+  # 1. The SQS Queue
+  VectorLogsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${ExistingS3BucketName}"
+      # VisibilityTimeout must be > than Vector's processing time per batch
+      VisibilityTimeout: 300 
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  # 2. The Policy allowing S3 to write to this Queue
+  VectorLogsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref VectorLogsQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt VectorLogsQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Sub "arn:aws:s3:::${ExistingS3BucketName}"
+
+  # 3. The IAM User
+  S3ReaderSQSWriterUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: S3ReaderSQSWriter
+
+  # 4. The IAM Policy
+  S3ReaderSQSWriterPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3ReaderSQSWriterPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage'
+              - 'sqs:GetQueueAttributes'
+            Resource: !GetAtt VectorLogsQueue.Arn
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+            Resource:
+              - !Sub "arn:aws:s3:::${ExistingS3BucketName}/*"
+              - !Sub "arn:aws:s3:::${ExistingS3BucketName}"
+      Users:
+        - !Ref S3ReaderSQSWriterUser
+
+  # 5. The IAM Access Key
+  S3ReaderSQSWriterKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref S3ReaderSQSWriterUser
+
+  SecretKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ExistingS3BucketName}/S3ReaderSQSWriter/SecretKey"
+      Description: !Sub "Secret Access Key for user S3ReaderSQSWriter to access ${ExistingS3BucketName}"
+      Value: !GetAtt S3ReaderSQSWriterKeys.SecretAccessKey
+      Type: SecureString
+
+Outputs:
+  QueueUrl:
+    Description: "The URL to put in your Vector config"
+    Value: !Ref VectorLogsQueue
+  QueueArn:
+    Description: "The ARN needed for the Python script"
+    Value: !GetAtt VectorLogsQueue.Arn
+  AccessKey:
+    Description: "Access key for the new user"
+    Value: !Ref S3ReaderSQSWriterKeys
