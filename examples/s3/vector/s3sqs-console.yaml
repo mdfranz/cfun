@@ -1,0 +1,15 @@
+sources:
+  s3_logs_source:
+    type: "aws_s3"
+    region: "us-east-1" 
+    sqs:
+      queue_url: "$VECTOR_SQS"
+    compression: "auto"
+
+sinks:
+  # Sink to print events to the console (stdout)
+  console_output:
+    type: "console"
+    inputs: ["s3_logs_source"] 
+    encoding:
+      codec: "json"

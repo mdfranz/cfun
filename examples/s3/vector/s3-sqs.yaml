@@ -74,10 +74,10 @@ Resources:
   SecretKeyParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${ExistingS3BucketName}/S3ReaderSQSWriter/SecretKey"
+      Name: !Sub ${ExistingS3BucketName}-${S3ReaderSQSWriterUser}
       Description: !Sub "Secret Access Key for user S3ReaderSQSWriter to access ${ExistingS3BucketName}"
       Value: !GetAtt S3ReaderSQSWriterKeys.SecretAccessKey
-      Type: SecureString
+      Type: String
 
 Outputs:
   QueueUrl:
