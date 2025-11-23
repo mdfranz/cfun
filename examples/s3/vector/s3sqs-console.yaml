@@ -6,10 +6,26 @@ sources:
       queue_url: "$VECTOR_SQS"
     compression: "auto"
 
+transforms:
+  parse_message_string:
+    type: "remap"
+    inputs: ["s3_logs_source"]
+    source: |
+      # Use the ! version to drop the event if parsing fails, 
+      # or remove ! to handle errors gracefully.
+      .message = parse_json!(.message)
+
+  flatten_structure:
+    type: "remap"
+    inputs: ["parse_message_string"]
+    source: |
+      . = merge!(., .message) 
+      del(.message)
 sinks:
-  # Sink to print events to the console (stdout)
-  console_output:
-    type: "console"
-    inputs: ["s3_logs_source"] 
+  # Sink to write events to rotating JSON files on disk
+  file_output:
+    type: "file"
+    inputs: ["flatten_structure"]
+    path: "./tmp/json_event/%Y-%m-%dT%H.json"
     encoding:
       codec: "json"
