@@ -7,19 +7,18 @@ sources:
     compression: "auto"
 
 transforms:
-  parse_message_string:
+  explode_audit_events:
     type: "remap"
     inputs: ["s3_logs_source"]
     source: |
-      # Use the ! version to drop the event if parsing fails, 
-      # or remove ! to handle errors gracefully.
+      # Parse the stringified JSON into an actual array
       .message = parse_json!(.message)
-
+      . = unnest!(.message)
   flatten_structure:
     type: "remap"
-    inputs: ["parse_message_string"]
+    inputs: ["explode_audit_events"]
     source: |
-      . = merge!(., .message) 
+      . = merge!(., .message)
       del(.message)
 sinks:
   # Sink to write events to rotating JSON files on disk
